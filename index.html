@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Todo App</title>
+  <title>jtalks Todo</title>
   <style>
     body { 
       font-family: system-ui, sans-serif; 
@@ -20,12 +20,15 @@
       padding: 24px; 
       border-radius: 16px; 
       box-shadow: 0 8px 24px rgba(0,0,0,.1); 
-      width: 360px;
+      width: 400px;
     }
     h1 { margin-top: 0; font-size: 24px; }
     .composer { display: flex; gap: 8px; margin-bottom: 16px; }
     .composer input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
     .composer button { padding: 10px 14px; border: none; border-radius: 8px; background: #007bff; color: white; cursor: pointer; }
+    .filters { display: flex; gap: 8px; margin-bottom: 16px; }
+    .filters button { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; background: #e0e0e0; }
+    .filters button.active { background: #007bff; color: white; }
     ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
     .todo { display: flex; align-items: center; background: #f0f2f6; padding: 10px; border-radius: 8px; }
     .todo.done .title { text-decoration: line-through; opacity: .6; }
@@ -35,10 +38,15 @@
 </head>
 <body>
   <div class="app">
-    <h1>✅ Todo</h1>
+    <h1>jtalks Todo</h1>
     <div class="composer">
       <input id="newTodo" type="text" placeholder="What needs to be done?">
       <button id="addBtn">Add</button>
+    </div>
+    <div class="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="active">Active</button>
+      <button data-filter="completed">Completed</button>
     </div>
     <ul id="list"></ul>
   </div>
@@ -47,9 +55,11 @@
     const listEl = document.getElementById('list');
     const inputEl = document.getElementById('newTodo');
     const addBtn = document.getElementById('addBtn');
+    const filterBtns = document.querySelectorAll('.filters button');
     const LS_KEY = 'todos-html-v1';
 
     let todos = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    let currentFilter = 'all';
 
     function save() {
       localStorage.setItem(LS_KEY, JSON.stringify(todos));
@@ -57,7 +67,11 @@
 
     function render() {
       listEl.innerHTML = '';
-      todos.forEach((todo, idx) => {
+      let filtered = todos;
+      if (currentFilter === 'active') filtered = todos.filter(t => !t.done);
+      if (currentFilter === 'completed') filtered = todos.filter(t => t.done);
+
+      filtered.forEach((todo, idx) => {
         const li = document.createElement('li');
         li.className = 'todo' + (todo.done ? ' done' : '');
 
@@ -89,7 +103,7 @@
         const delBtn = document.createElement('button');
         delBtn.textContent = '🗑️';
         delBtn.onclick = () => {
-          todos.splice(idx, 1);
+          todos.splice(todos.indexOf(todo), 1);
           save(); render();
         };
 
@@ -102,6 +116,8 @@
 
         listEl.appendChild(li);
       });
+
+      filterBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.filter === currentFilter));
     }
 
     function add() {
@@ -114,6 +130,11 @@
 
     addBtn.onclick = add;
     inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+
+    filterBtns.forEach(btn => btn.onclick = () => {
+      currentFilter = btn.dataset.filter;
+      render();
+    });
 
     render();
   </script>
