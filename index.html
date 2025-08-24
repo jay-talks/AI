@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo App</title>
+  <style>
+    body { 
+      font-family: system-ui, sans-serif; 
+      background: #f5f7fa; 
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      justify-content: center; 
+      align-items: flex-start; 
+      min-height: 100vh; 
+    }
+    .app { 
+      background: #fff; 
+      margin-top: 50px; 
+      padding: 24px; 
+      border-radius: 16px; 
+      box-shadow: 0 8px 24px rgba(0,0,0,.1); 
+      width: 360px;
+    }
+    h1 { margin-top: 0; font-size: 24px; }
+    .composer { display: flex; gap: 8px; margin-bottom: 16px; }
+    .composer input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+    .composer button { padding: 10px 14px; border: none; border-radius: 8px; background: #007bff; color: white; cursor: pointer; }
+    ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .todo { display: flex; align-items: center; background: #f0f2f6; padding: 10px; border-radius: 8px; }
+    .todo.done .title { text-decoration: line-through; opacity: .6; }
+    .title { flex: 1; margin-left: 8px; }
+    .actions button { margin-left: 6px; border: none; background: #e0e0e0; border-radius: 6px; padding: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>✅ Todo</h1>
+    <div class="composer">
+      <input id="newTodo" type="text" placeholder="What needs to be done?">
+      <button id="addBtn">Add</button>
+    </div>
+    <ul id="list"></ul>
+  </div>
+
+  <script>
+    const listEl = document.getElementById('list');
+    const inputEl = document.getElementById('newTodo');
+    const addBtn = document.getElementById('addBtn');
+    const LS_KEY = 'todos-html-v1';
+
+    let todos = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+
+    function save() {
+      localStorage.setItem(LS_KEY, JSON.stringify(todos));
+    }
+
+    function render() {
+      listEl.innerHTML = '';
+      todos.forEach((todo, idx) => {
+        const li = document.createElement('li');
+        li.className = 'todo' + (todo.done ? ' done' : '');
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = todo.done;
+        cb.onchange = () => {
+          todo.done = cb.checked;
+          save(); render();
+        };
+
+        const span = document.createElement('span');
+        span.className = 'title';
+        span.textContent = todo.text;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.textContent = '✏️';
+        editBtn.onclick = () => {
+          const t = prompt('Edit todo', todo.text);
+          if (t !== null) {
+            todo.text = t.trim();
+            save(); render();
+          }
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '🗑️';
+        delBtn.onclick = () => {
+          todos.splice(idx, 1);
+          save(); render();
+        };
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        li.appendChild(cb);
+        li.appendChild(span);
+        li.appendChild(actions);
+
+        listEl.appendChild(li);
+      });
+    }
+
+    function add() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      todos.push({ text, done: false });
+      inputEl.value = '';
+      save(); render();
+    }
+
+    addBtn.onclick = add;
+    inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+
+    render();
+  </script>
+</body>
+</html>
